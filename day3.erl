@@ -24,14 +24,11 @@ get_wire_points(Input) ->
     sets:del_element({0, 0}, FinalSet).
 
 snd() ->
-    %{ok, Data} = file:read_file("day3.input"),
-    %[FirstWire, SecondWire] = string:split(binary_to_list(Data), "\r\n", all),
-    
-    FirstWire = "R75,D30,R83,U83,L12,D49,R71,U7,L72",
-    SecondWire = "U62,R66,U55,R34,D71,R55,D58,R83",
+    {ok, Data} = file:read_file("day3.input"),
+    [FirstWire, SecondWire] = string:split(binary_to_list(Data), "\r\n", all),
     {FirstWirePoints, FirstWireSteps} = get_wire_points_with_steps(FirstWire),
-    {SecondWirePoints, _SecondWireSteps} = get_wire_points_with_steps(SecondWire),
-    lists:min([maps:get(Point, FirstWireSteps) || Point <- sets:to_list(sets:intersection(FirstWirePoints, SecondWirePoints))]).
+    {SecondWirePoints, SecondWireSteps} = get_wire_points_with_steps(SecondWire),
+    lists:min([maps:get(Point, FirstWireSteps) + maps:get(Point, SecondWireSteps) || Point <- sets:to_list(sets:intersection(FirstWirePoints, SecondWirePoints))]).
 
 sign(0) -> 0;
 sign(N) when N < 0 -> -1;
@@ -55,7 +52,7 @@ get_wire_points_with_steps(Input) ->
                 _ -> MidMap#{NewPoint => ExtraSteps}
             end,
             {sets:add_element(NewPoint, MidSet), ExtraSteps + 1, UpdatedMidMap}
-        end, {PointsSet, PreviousSteps, PointsStepMap}, [{X, Y} || X <- lists:seq(AccX, UpdatedX, sign(UpdatedX - AccX)), Y <- lists:seq(AccY, UpdatedY, sign(UpdatedY - AccY))]),
+        end, {PointsSet, PreviousSteps, PointsStepMap}, [{X, Y} || X <- lists:seq(AccX + sign(UpdatedX - AccX), UpdatedX, sign(UpdatedX - AccX)), Y <- lists:seq(AccY + sign(UpdatedY - AccY), UpdatedY, sign(UpdatedY - AccY))]),
          {UpdatedPointsSet, UpdatedExtraSteps, UpdatedPointsStepMap, {UpdatedX, UpdatedY}}
-    end, {sets:new(), 0, maps:new(), {0, 0}}, lists:map(HandlePart, string:split(Input, ",", all))),
+    end, {sets:new(), 1, maps:new(), {0, 0}}, lists:map(HandlePart, string:split(Input, ",", all))),
     {sets:del_element({0, 0}, FinalSet), FinalMap}.
