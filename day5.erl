@@ -11,9 +11,6 @@ snd() ->
     Tape = list_to_tuple(lists:map(fun binary_to_integer/1, string:split(Data, ",", all))),
     lists:last(run(0, Tape, 5)).
 
-get(I, Tuple) -> element(I + 1, Tuple).
-set(I, Tuple, New) -> setelement(I + 1, Tuple, New).
-
 run(I, Tape, Input) ->
     {Operator, ParameterModes} = case lists:reverse(integer_to_list(get(I, Tape))) of
         [OpDigit2, OpDigit1 | ParamModes] -> {list_to_integer([OpDigit1, OpDigit2]), ParamModes};
@@ -49,10 +46,17 @@ run(I, Tape, Input) ->
             Run(I + 4, set(Out, Tape, case Arg1 =:= Arg2 of true -> 1; false -> 0 end))
     end.
 
+get(I, Tuple) -> 
+    element(I + 1, Tuple).
+set(I, Tuple, New) -> 
+    setelement(I + 1, Tuple, New).
+
 get_params(N, InitialI, Tape, ParameterModes, IgnoreWriting) ->
     FullParameterModes = fill_string_right(ParameterModes, $0, N),
     Args = list_to_tuple([case Mode of $0 -> get(get(I, Tape), Tape); $1 -> get(I, Tape) end || {Mode, I} <- lists:zip(FullParameterModes, lists:seq(InitialI + 1, InitialI + N))]),
     case IgnoreWriting of true -> Args; false -> setelement(N, Args, get(InitialI + N, Tape)) end.
 
-fill_string_right(Str, _, N) when length(Str) =:= N -> Str;
-fill_string_right(Str, Char, N) -> fill_string_right(Str ++ [Char], Char, N).
+fill_string_right(Str, _, N) when length(Str) =:= N -> 
+    Str;
+fill_string_right(Str, Char, N) -> 
+    fill_string_right(Str ++ [Char], Char, N).
