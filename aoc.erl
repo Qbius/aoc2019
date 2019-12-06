@@ -28,15 +28,14 @@ day(Number) ->
             "Compilation of file " ++ Filename ++ " unsuccessful"
     end.
 
-new(N) ->
-    Number = 6,
-    DayName = "days/day" ++ integer_to_list(N) ++ ".erl",
-    InputName = "inputs/day" ++ integer_to_list(N) ++ ".input",
+new(Number) ->
+    DayName = "days/day" ++ integer_to_list(Number) ++ ".erl",
+    InputName = "inputs/day" ++ integer_to_list(Number) ++ ".input",
     case filelib:is_file(DayName) orelse filelib:is_file(InputName) of
         true ->
             "At least one of the files already exists!";
         false ->
-            file:write_file(DayName, "-module(day" ++ integer_to_list(N) ++ ").\n-export([fst/1, snd/1]).\n\nfst(Input) -> \n    unknown.\n\nsnd(Input) ->\n    unknown.\n\n-ifdef(puzzle_description)." ++ get_day_content(Number) ++ "\n-endif.", [append]),
+            file:write_file(DayName, "-module(day" ++ integer_to_list(Number) ++ ").\n-export([fst/1, snd/1]).\n\nfst(Input) -> \n    unknown.\n\nsnd(Input) ->\n    unknown.\n\n-ifdef(puzzle_description)." ++ get_day_content(Number) ++ "\n-endif.", [append]),
             file:write_file(InputName, get_day_input(Number)),
             ready
     end.
