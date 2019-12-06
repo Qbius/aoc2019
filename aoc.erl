@@ -28,12 +28,69 @@ day(Number) ->
             "Compilation of file " ++ Filename ++ " unsuccessful"
     end.
 
-new(Number) ->
-    Name = "days/day" ++ integer_to_list(Number) ++ ".erl",
-    case filelib:is_file(Name) of
+new(N) ->
+    Number = 6,
+    DayName = "days/day" ++ integer_to_list(N) ++ ".erl",
+    InputName = "inputs/day" ++ integer_to_list(N) ++ ".input",
+    case filelib:is_file(DayName) orelse filelib:is_file(InputName) of
         true ->
-            "File already exists!";
+            "At least one of the files already exists!";
         false ->
-            file:write_file(Name, "-module(day" ++ integer_to_list(Number) ++ ").\n-export([fst/1, snd/1]).\n\nfst(Input) -> \n    unknown.\n\nsnd(Input) ->\n    unknown.\n", [append]),
+            file:write_file(DayName, "-module(day" ++ integer_to_list(N) ++ ").\n-export([fst/1, snd/1]).\n\nfst(Input) -> \n    unknown.\n\nsnd(Input) ->\n    unknown.\n\n-ifdef(puzzle_description)." ++ get_day_content(Number) ++ "\n-endif.", [append]),
+            file:write_file(InputName, get_day_input(Number)),
             ready
     end.
+
+aoc_get(Query) ->
+    ssl:start(),
+    inets:start(),
+    {ok, AOCToken} = file:read_file("aoc_token"),
+    Headers = [{"Cookie", "session=" ++ binary_to_list(AOCToken)}],
+    HTTPOptions = [],
+    Options = [],
+    {ok, {_, _, Content}} = httpc:request(get, {"https://adventofcode.com/2019/" ++ Query, Headers}, HTTPOptions, Options),
+    string:trim(Content).
+
+get_day_content(Number) ->
+    sanitize_source(aoc_get("day/" ++ integer_to_list(Number))).
+
+get_day_input(Number) ->
+    aoc_get("day/" ++ integer_to_list(Number) ++ "/input").
+
+sanitize_source(Source) -> % this function is dirty! It's made specifically to handle AoC puzzle pages source code, alright?
+    [_, AfterMain] = string:split(Source, "<main>"),
+    [BeforeEndMain, _] = string:split(AfterMain, "</main>"),
+    remove_html(lists:foldl(fun({From, To}, MidString) ->
+        string:join(string:replace(MidString, From, To, all), "")
+    end, BeforeEndMain, [{"</h2>", "\n"}, {"&amp;", "&"}, {"&lt;", "<"}, {"&gt;", ">"}, {"&quot;", "\""}])).
+
+remove_html(Str) -> remove_html(Str, false, []).
+remove_html([], _, Result) -> lists:reverse(Result);
+remove_html([$<, $s, $c, $r, $i, $p, $t, $> | T], false, Result) ->
+    remove_html(T, script_true, Result);
+remove_html([$<, $/, $s, $c, $r, $i, $p, $t, $> | T], script_true, Result) ->
+    remove_html(T, false, Result);
+remove_html([$< | T], false, Result) ->
+    case remove_prefixes(create_html_tag_list(["code", "div", "li", "span", "p", "h2", "pre", "ul", "article", "em", "a"]), T) of
+        nomatch ->
+            remove_html(T, false, [$<|Result]);
+        TrimmedStr ->
+            remove_html(TrimmedStr, true, Result)
+    end;
+remove_html([$> | T], true, Result) ->
+    remove_html(T, false, Result);
+remove_html([H | T], false, Result) ->
+    remove_html(T, false, [H | Result]);
+remove_html([_ | T], Other, Result) ->
+    remove_html(T, Other, Result).
+
+create_html_tag_list(BaseList) ->
+    BaseList ++ [[$/ | Tag] || Tag <- BaseList].
+
+remove_prefixes([Tag|T], Str) ->
+    case string:prefix(Str, Tag) of
+        nomatch -> remove_prefixes(T, Str);
+        TrimmedStr -> TrimmedStr
+    end;
+remove_prefixes([], _) ->
+    nomatch.
