@@ -1,14 +1,12 @@
 -module(day5).
--export([fst/0, snd/0]).
+-export([fst/1, snd/1]).
 
-fst() ->
-    {ok, Data} = file:read_file("day5.input"),
-    Tape = list_to_tuple(lists:map(fun binary_to_integer/1, string:split(Data, ",", all))),
+fst(FileInput) ->
+    Tape = list_to_tuple(lists:map(fun binary_to_integer/1, string:split(FileInput, ",", all))),
     lists:last(run(0, Tape, 1)).
 
-snd() ->
-    {ok, Data} = file:read_file("day5.input"),
-    Tape = list_to_tuple(lists:map(fun binary_to_integer/1, string:split(Data, ",", all))),
+snd(FileInput) ->
+    Tape = list_to_tuple(lists:map(fun binary_to_integer/1, string:split(FileInput, ",", all))),
     lists:last(run(0, Tape, 5)).
 
 run(I, Tape, Input) ->

@@ -1,13 +1,12 @@
 -module(day3).
--export([fst/0, snd/0]).
+-export([fst/1, snd/1]).
 
 sign(0) -> 0;
 sign(N) when N < 0 -> -1;
 sign(_) -> 1.
 
-fst() ->
-    {ok, Data} = file:read_file("day3.input"),
-    [FirstWire, SecondWire] = string:split(binary_to_list(Data), "\r\n", all),
+fst(Input) ->
+    [FirstWire, SecondWire] = string:split(binary_to_list(Input), "\r\n", all),
     lists:min([abs(X) + abs(Y) || {X, Y} <- sets:to_list(sets:intersection(get_wire_points(FirstWire), get_wire_points(SecondWire)))]).
 
 get_wire_points(Input) ->
@@ -27,9 +26,8 @@ get_wire_points(Input) ->
     end, {sets:new(), {0, 0}}, lists:map(HandlePart, string:split(Input, ",", all))),
     FinalSet.
 
-snd() ->
-    {ok, Data} = file:read_file("day3.input"),
-    [FirstWire, SecondWire] = string:split(binary_to_list(Data), "\r\n", all),
+snd(Input) ->
+    [FirstWire, SecondWire] = string:split(binary_to_list(Input), "\r\n", all),
     {FirstWirePoints, FirstWireSteps} = get_wire_points_with_steps(FirstWire),
     {SecondWirePoints, SecondWireSteps} = get_wire_points_with_steps(SecondWire),
     lists:min([maps:get(Point, FirstWireSteps) + maps:get(Point, SecondWireSteps) || Point <- sets:to_list(sets:intersection(FirstWirePoints, SecondWirePoints))]).
