@@ -22,8 +22,12 @@ run(I, Tape, Inputs, Outputs) ->
             {Arg1, Arg2, Out} = GetParams(3),
             run(I + 4, set(Out, Tape, Arg1 * Arg2), Inputs, Outputs);
         3 ->
-            [Input | RestInputs] = Inputs,
-            run(I + 2, set(get(I + 1, Tape), Tape, Input), RestInputs, Outputs);
+            case Inputs of
+                [Input | RestInputs] ->
+                    run(I + 2, set(get(I + 1, Tape), Tape, Input), RestInputs, Outputs);
+                [] ->
+                    {Tape, lists:reverse(Outputs)}
+            end;
         4 ->
             {Out} = GetParams(1),
             run(I + 2, Tape, Inputs, [get(Out, Tape) | Outputs]);
