@@ -2,31 +2,31 @@
 -export([day/1, new/1]).
 
 day(Number) ->
+    {ok, Cwd} = file:get_cwd(),
+    {ok, CommonModules} = file:list_dir(Cwd ++ "/common"),
+    lists:foreach(fun compile/1, ["common/" ++ CMFilename || CMFilename <- CommonModules]),
+
     Filename = "days/day" ++ integer_to_list(Number) ++ ".erl",
-    case compile:file(Filename, []) of
-        {ok, Module} ->
-            code:purge(Module),
-            code:load_file(Module),
-            {ok, Input} = file:read_file("inputs/day" ++ integer_to_list(Number) ++ ".input"),
-            Start = os:system_time(millisecond),
-            GetAnswer = fun(Fun) ->
-                case Module:Fun(Input) of
-                    unknown ->
-                        unknown;
-                    Result when is_integer(Result) ->
-                        Answer = integer_to_list(Result),
-                        Stop = os:system_time(millisecond),
-                        Minutes = integer_to_list((Stop - Start) div 60000),
-                        Seconds = case io_lib:format("~.3f", [((Stop - Start) rem 60000) / 1000]) of [S] -> S; S -> S end,
-                        "The answer is " ++ Answer ++ ", time elapsed: " ++ Minutes ++ " minutes and " ++ Seconds ++ " seconds"
-                end
-            end,
-            io:format("First part:~n~s~n", [GetAnswer(fst)]),
-            io:format("Second part:~n~s~n", [GetAnswer(snd)]),
-            finished;
-        _ ->
-            "Compilation of file " ++ Filename ++ " unsuccessful"
-    end.
+    Module = compile(Filename),
+    {ok, Input} = file:read_file("inputs/day" ++ integer_to_list(Number) ++ ".input"),
+ 
+    GetAnswer = fun(Fun) ->
+        Start = os:system_time(millisecond),
+        case Module:Fun(Input) of
+            unknown ->
+                unknown;
+            Result when is_integer(Result) ->
+                Answer = integer_to_list(Result),
+                Stop = os:system_time(millisecond),
+                Minutes = integer_to_list((Stop - Start) div 60000),
+                Seconds = case io_lib:format("~.3f", [((Stop - Start) rem 60000) / 1000]) of [S] -> S; S -> S end,
+                "The answer is " ++ Answer ++ ", time elapsed: " ++ Minutes ++ " minutes and " ++ Seconds ++ " seconds"
+        end
+    end,
+
+    io:format("First part:~n~s~n", [GetAnswer(fst)]),
+    io:format("Second part:~n~s~n", [GetAnswer(snd)]),
+    finished.
 
 new(Number) ->
     DayName = "days/day" ++ integer_to_list(Number) ++ ".erl",
@@ -38,6 +38,17 @@ new(Number) ->
             file:write_file(DayName, "-module(day" ++ integer_to_list(Number) ++ ").\n-export([fst/1, snd/1]).\n\nfst(Input) -> \n    unknown.\n\nsnd(Input) ->\n    unknown.\n\n-ifdef(puzzle_description)." ++ get_day_content(Number) ++ "\n-endif.", [append]),
             file:write_file(InputName, get_day_input(Number)),
             ready
+    end.
+
+compile(Filename) ->
+    case compile:file(Filename) of
+        {ok, Module} ->
+            code:purge(Module),
+            code:load_file(Module),
+            Module;
+        Errors ->
+            io:format("Attempt to compile ~p unsuccessful:~n~p", [Filename, Errors]),
+            throw(compilation_unsuccessful)
     end.
 
 aoc_get(Query) ->
