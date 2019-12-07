@@ -1,5 +1,8 @@
 -module(intcode).
--export([run/1, run/2]).
+-export([parse/1, run/1, run/2]).
+
+parse(Data) ->
+    list_to_tuple(lists:map(fun binary_to_integer/1, string:split(Data, ",", all))).
 
 run(Tape) -> run(0, Tape, [], []).
 run(Tape, Inputs) -> run(0, Tape, Inputs, []).
