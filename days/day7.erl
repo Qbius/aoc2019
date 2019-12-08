@@ -11,10 +11,36 @@ fst(Input) ->
     end, permutations([0, 1, 2, 3, 4]))). 
 
 snd(Input) ->
-    unknown.
+    Tape = intcode:parse(Input),
+    lists:max(lists:map(fun(AmpSettings) ->
+
+        {FirstLoopOutputs, ProcessedTapes} = lists:foldl(fun(AmpSetting, {Outputs, Results}) ->
+            {ProcessedTape, IntcodeOutputs} = intcode:run(Tape, [AmpSetting | Outputs]),
+            {IntcodeOutputs, [ProcessedTape | Results]}
+        end, {[0], []}, AmpSettings),
+        run_until_finished(ProcessedTapes, FirstLoopOutputs)       
+    end, permutations([5, 6, 7, 8, 9]))). 
 
 permutations([]) -> [[]];
 permutations(L)  -> [[H|T] || H <- L, T <- permutations(L -- [H])].
+
+run_until_finished(Tapes, LastLoopOutputs) ->
+    FoldlResult = lists:foldl(fun(Tape, [Inputs | Results]) ->
+        case intcode:run(Tape, Inputs) of
+            {waiting_for_input, ProcessedTape, IntcodeOutputs} ->
+                io:fwrite("Here last FOLDLRESULT"),
+                {IntcodeOutputs, [ProcessedTape | Results]};
+            {_, IntcodeOutputs} ->
+                lists:last(IntcodeOutputs)
+        end,
+        lists:last(IntcodeOutputs)
+    end, {LastLoopOutputs, []}, Tapes),
+    case FoldlResult of
+        {CurrentLoopOutputs, ProcessedTapes} ->
+            run_until_finished(ProcessedTapes, CurrentLoopOutputs);
+        Result ->
+            Result
+    end.
 
 -ifdef(puzzle_description).
 

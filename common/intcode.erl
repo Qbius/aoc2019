@@ -26,7 +26,7 @@ run(I, Tape, Inputs, Outputs) ->
                 [Input | RestInputs] ->
                     run(I + 2, set(get(I + 1, Tape), Tape, Input), RestInputs, Outputs);
                 [] ->
-                    {Tape, lists:reverse(Outputs)}
+                    {waiting_for_input, Tape, lists:reverse(Outputs)}
             end;
         4 ->
             {Out} = GetParams(1),
