@@ -15,8 +15,8 @@ day(Number) ->
         case Module:Fun(Input) of
             unknown ->
                 unknown;
-            Result when is_integer(Result) ->
-                Answer = integer_to_list(Result),
+            Result ->
+                Answer = io_lib:format(case is_list(Result) of true -> "~s"; false -> "~p" end, [Result]),
                 Stop = os:system_time(millisecond),
                 Minutes = integer_to_list((Stop - Start) div 60000),
                 Seconds = case io_lib:format("~.3f", [((Stop - Start) rem 60000) / 1000]) of [S] -> S; S -> S end,
